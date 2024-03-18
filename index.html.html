@@ -1,0 +1,498 @@
+<!-- 19/03/2024 @BA_XX -->
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BA_BALL v1.0 @BA_XX</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    body {
+      background-color: black;
+      padding: 40px 0px;
+    }
+
+    :root {
+      --screen_h: 360px;
+      --screen_w: 720px;
+      --ball_size: 30px;
+      --bar_height: 8px;
+      --bar_width: 130px;
+    }
+
+    @media (max-width: 720px) {
+
+      :root {
+        --screen_h: 180px;
+        --screen_w: 360px;
+        --ball_size: 20px;
+        --bar_height: 4px;
+        --bar_width: 80px;
+      }
+
+
+    }
+
+    #stage {
+      background-color: aquamarine;
+      height: var(--screen_h);
+      width: var(--screen_w);
+      position: relative;
+    }
+
+    #ball {
+      background-color: red;
+      height: var(--ball_size);
+      width: var(--ball_size);
+
+      top: calc(50% - var(--ball_size)/2);
+      left: calc(50% - var(--ball_size) /2);
+
+      border-radius: 50%;
+      position: absolute;
+
+    }
+
+    #bar {
+
+      height: var(--bar_height);
+      width: var(--bar_width);
+
+      background-color: black;
+      position: absolute;
+      border-radius: 0px 0px 14px 14px;
+      top: calc(var(--screen_h) - 30px);
+      left: calc(50% - 65px);
+    }
+
+    .center {
+      display: flex;
+      justify-content: center;
+    }
+
+    .header_name {
+      color: white;
+      text-align: center;
+      font-family: "Press Start 2P", system-ui;
+      margin-bottom: 20px;
+    }
+
+    #bottom-triangles {
+      top: calc(var(--screen_h) - 14.5px);
+      position: absolute;
+    }
+
+    #game-over {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      display: none;
+    }
+
+    #game-over h1 {
+      font-family: "Press Start 2P", system-ui;
+      font-size: 2rem;
+      width: 100%;
+      text-align: center;
+    }
+
+    #btn-relance {
+      background-color: black;
+      border: none;
+      font-size: 1rem;
+      color: white;
+      font-family: "Press Start 2P", system-ui;
+      padding: 20px 0px;
+      margin-top: 30px;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    #game-info {
+      text-align: center;
+    }
+
+    #game-info h2 {
+      background-color: white;
+      display: inline-block;
+      padding: 10px 20px;
+      margin-top: 12px;
+      margin-right: 12px;
+      text-align: center;
+      font-family: "Press Start 2P", system-ui;
+
+    }
+
+    #game-controllers {
+      display: flex;
+      justify-content: center;
+      padding: 20px 0px;
+    }
+
+    @media (min-width: 720px) {
+      #game-controllers {
+        display: none;
+
+      }
+    }
+
+    #game-controllers button {
+
+      height: 50px;
+      width: 50px;
+      border-radius: 50%;
+      background-color: white;
+      margin-right: 20px;
+      outline: none;
+      border: none;
+      font-family: "Press Start 2P", system-ui;
+      font-size: 1.3rem;
+      text-align: center;
+      cursor: pointer;
+
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1 class="header_name">BA_BALL v1.0 @BA_XX</h1>
+  <div class="center">
+    <div id="stage">
+      <div id="ball"></div>
+      <div id="bar"></div>
+
+      <div id="bottom-triangles"></div>
+      <div id="game-over">
+        <h1>JEU TERMINÉ !
+          <br>
+          <button id="btn-relance">=> RELANCE (ESPACE)</button>
+        </h1>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="game-info">
+    <h2 id="game-timer">00:00</h2>
+    <h2 id="speed-counter">00 PX/S</h2>
+  </div>
+
+  <div id="game-controllers">
+    <button id="controle-left">
+      < </button>
+        <button id="controle-right"> > </button>
+  </div>
+  <script>
+
+    class GameOject {
+
+      constructor(id, game, step = 0) {
+
+        this._object = document.querySelector(`#${id}`);
+        this._height = this._object.offsetHeight;
+        this._width = this._object.offsetWidth;
+        this._step = step;
+        this._pos_x = 0;
+        this._pos_y = 0;
+        this._game = game;
+
+      }
+
+      get width() { return this._width; }
+      get height() { return this._height; }
+      set x(pos_x) { this._pos_x = pos_x; }
+      get x() { return this._pos_x; }
+      set y(pos_y) { this._pos_y = pos_y; }
+      get y() { return this._pos_y; }
+      set step(step) { this._step = step; }
+      get step() { return this._step; }
+
+    }
+    class Ball extends GameOject {
+
+      constructor(id, game) {
+
+        super(id, game, 5);
+
+        this.reset();
+      }
+
+      get size() { return this._height; }
+      set angle(angle) { this._angle = angle; }
+      get angle() { return this._angle; }
+
+      moveX() {
+        this._object.style.left = `${this._pos_x += this.calculStepX()}px`;
+      }
+      moveY() {
+        this._object.style.top = `${this._pos_y += this.calculStepY()}px`;
+      }
+
+      calculStepY() {
+        return this._step * Math.sin(this._angle);
+      }
+      calculStepX() {
+        return this._step * Math.cos(this._angle);
+      }
+
+      angleToRadian(angle) {
+        return angle * (Math.PI / 180); //  convertir la valeur d'angle en degree en radian
+      }
+
+      reset() {
+        this._pos_x = this._game._screen_w / 2 - this._width / 2;
+        this._pos_y = this._game._screen_h / 2 - this._height / 2;
+        this._step = 5;
+        this._angle = 40 + this.angleToRadian(Math.random() * 320); // Nombre aléatoire entre 40 et 360 degrés
+      }
+    }
+
+    class Bar extends GameOject {
+
+      constructor(id, game) {
+        super(id, game, 30);
+
+        this._pos_y = this._game._screen_h - 30;
+
+        this.reset();
+      }
+
+      moveRight() {
+        if (this._pos_x + this._width < this._game._screen_w && !this._game._is_game_over)
+          this._object.style.left = `${this._pos_x += this._step}px`;
+
+      }
+      moveLeft() {
+        if (this._pos_x > 0 && !this._game._is_game_over)
+          this._object.style.left = `${this._pos_x -= this._step}px`;
+
+      }
+
+      reset() {
+        this._pos_x = this._game._screen_w / 2 - this._width / 2;
+        this._object.style.left = `${this._pos_x}px`;
+      }
+
+
+    }
+
+    class Game {
+
+      constructor(game_stage_id, ball_id, bar_id, game_timer_id, speed_counter_id, game_over_id) {
+
+
+        this._stage = document.querySelector(`#${game_stage_id}`);
+        this._game_timer = document.querySelector(`#${game_timer_id}`);
+        this._speed_counter = document.querySelector(`#${speed_counter_id}`);
+        this._game_over = document.querySelector(`#${game_over_id}`);
+
+        this._screen_w = this._stage.offsetWidth;
+        this._screen_h = this._stage.offsetHeight;
+
+        this._play_time = 0;
+        this._is_game_over = false;
+        this._interval_id;
+        this._acceleration = 20;
+        this._max_steps = 15;
+
+        this._ball = new Ball(ball_id, this);
+        this._bar = new Bar(bar_id, this);
+
+
+      }
+
+      start() { // lancer le jeu
+
+        if (this._is_game_over == true) // reinitialser le jeu si le jeu est terminer
+          this.#reset();
+
+        this._interval_id = setInterval(() => {
+
+          this.#move_x();
+          this.#move_y();
+
+          this._play_time += this._acceleration;
+
+          if (this._play_time % 1000 == 0)
+            this.#updatePlayTime();
+          if (this._play_time % 10000 == 0 && this._ball.step <= this._max_steps) {
+            this._ball.step = 5 + this._play_time / 10000; // augmenter le nombre de pas
+
+            this.#updateSpeedCounter();
+          }
+
+        }, this._acceleration);
+
+
+      }
+
+      #updatePlayTime() { // mise à jour du compteur du temp
+        this._game_timer.innerText = `${new Date(this._play_time).toISOString().substring(14, 19)}`;
+      }
+      #updateSpeedCounter() { // mise à jour du compteur de la vitesse
+        this._speed_counter.innerText = `${this._ball.step * 50} PX/S`;
+      }
+
+      #showGameOver(status = true) { // afficher jeu terminer
+
+        clearInterval(this._interval_id);
+
+        this._is_game_over = status;
+
+        if (!status)
+          this._game_over.style.display = "none";
+        else
+          this._game_over.style.display = "flex";
+      }
+
+      #move_x() { // déplacer la balle selon l'axe x
+
+        if (this._ball.x + this._ball.calculStepX() >= this._screen_w - this._ball.size)
+          this._ball.x = this._screen_w - this._ball.size;
+
+        if (this._ball.x + this._ball.calculStepX() <= 0)
+          this._ball.x = 0;
+
+        if (this.#isBallCoincideWithBar()) {
+          this._ball.angle = - this._ball.angle;
+        }
+
+        if (this._ball.x <= this._screen_w - this._ball.size - this._ball.calculStepX() && this._ball.x >= -this._ball.calculStepX())
+          this._ball.moveX();
+        else if (this._ball.x == this._screen_w - this._ball.size)
+          this._ball.angle = Math.PI - this._ball.angle;
+        else if (this._ball.x == 0)
+          this._ball.angle = Math.PI - this._ball.angle;
+
+      }
+
+      #move_y() { // déplacer la balle selon l'axe y
+
+        /*if (ball.y + calculStepY() >= screen_h - ball.size)
+          ball.y = screen_h - ball.size;*/
+
+        if (this._ball.y + this._ball.calculStepY() <= 0)
+          this._ball.y = 0;
+
+        if (this._ball.y <= this._screen_h - this._ball.size && this._ball.y >= -this._ball.calculStepY()) { // this._ball.y < this._screen_h - this._ball.size - calculStepY() &&
+          this._ball.moveY();
+        } else if (this._ball.y >= this._screen_h - this._ball.size) {
+          this.#showGameOver(); //teta = - teta;
+        } else if (this._ball.y == 0)
+          this._ball.angle = 2 * Math.PI - this._ball.angle;
+      }
+
+      #isBallCoincideWithBar() { // vérifier si la balle coïncide avec la barre
+
+        return ((this._ball.x + this._ball.size >= this._bar.x && this._ball.x <= this._bar.x + this._bar.width)
+          && (this._ball.y + this._ball.size >= this._bar.y && this._ball.y + this._ball.size <= this._bar.y + this._bar.height));
+
+      }
+
+
+      #reset() {
+
+        // reinitialiser le jeu
+
+        this._play_time = 0; // le temp
+        this._is_game_over = false; // l'etat de jeu
+
+        this._ball.reset(); // la postion de la ball
+        this._bar.reset(); // la position de la bare
+
+
+        this.#showGameOver(false); // supprimer l'interface qui affiche le jeu terminé 
+
+        this.#updatePlayTime(); // reinitialiser le counteur du temp
+        this.#updateSpeedCounter(); // reintialiser le counteur de vitesse
+      }
+
+    }
+
+
+    /* Main Pograme */
+    const btnRelance = document.querySelector("#btn-relance");
+    const contoleRight = document.querySelector("#controle-right");
+    const controleLeft = document.querySelector("#controle-left");
+
+    /*nouveua jeu */
+    const game = new Game("stage", "ball", "bar", "game-timer", "speed-counter", "game-over");
+    game.start(); // commencer un nouveau jeu
+
+
+    /* events */
+    contoleRight.addEventListener('click', e => {
+      game._bar.moveRight();
+    });
+    controleLeft.addEventListener('click', e => {
+      game._bar.moveLeft();
+    })
+
+    btnRelance.addEventListener('click', e => {
+      game.start();
+    });
+
+    /* keyboard events */
+    document.addEventListener('keydown', e => {
+      switch (e.keyCode) {
+        case 37:
+          game._bar.moveLeft();
+          break;
+        case 39:
+          game._bar.moveRight();
+          break;
+        case 32: // relancer une nouveau game en cliquant sur space
+          e.preventDefault();
+          if (game._is_game_over)
+            game.start();
+          break;
+      }
+    });
+
+
+
+    // Create an SVG element
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("width", game._screen_w);
+    svg.setAttribute("height", "5");
+    svg.setAttribute("viewBox", `0 0 ${game._screen_w} 5`);
+
+    // Define triangle
+    var defs = document.createElementNS(svgNS, "defs");
+    var polygon = document.createElementNS(svgNS, "polygon");
+    polygon.setAttribute("id", "triangle");
+    polygon.setAttribute("points", "0,5 2.5,0 5,5");
+    defs.appendChild(polygon);
+    svg.appendChild(defs);
+
+    // Add triangles dynamically
+    var numTriangles = game._screen_w / 5;
+    for (var i = 0; i < numTriangles; i++) {
+      var use = document.createElementNS(svgNS, "use");
+      use.setAttribute("href", "#triangle");
+      use.setAttribute("x", i * 5);
+      use.setAttribute("y", "0");
+      svg.appendChild(use);
+    }
+
+    // Append SVG to container
+    document.getElementById("bottom-triangles").appendChild(svg);
+  </script>
+</body>
+
+</html>
